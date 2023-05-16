@@ -1,0 +1,111 @@
+
+###################################################################################################
+# WIDER Faces Net CHW Configuration
+# Lionnus Kesting
+# Machine Learning on Microcontrollers
+# 2023 - ETH Zurich
+###################################################################################################
+---
+# CHW configuration for widerfacenet
+arch: WIDERFaceNet
+dataset: WIDERFacesDataset
+
+layers:
+  - pad: 0
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0x0000.0000.0000.0007
+    data_format: HWC
+    op: conv2d
+    kernel: [11, 11]
+    stride: [4, 4]
+    filters: 96
+
+  - pad: 0
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0xffff.ffff.0000.0000
+    op: conv2d
+    kernel: [3, 3]
+    stride: [2, 2]
+    filters: 96
+
+  - op: lrn
+    radius: 5
+    alpha: 0.0001
+    beta: 0.75
+
+  - pad: 1
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0x0000.0000.0000.0007
+    data_format: HWC
+    op: conv2d
+    kernel: [5, 5]
+    stride: [1, 1]
+    filters: 256
+
+  - pad: 0
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0xffff.ffff.0000.0000
+    op: conv2d
+    kernel: [3, 3]
+    stride: [2, 2]
+    filters: 256
+
+  - op: lrn
+    radius: 5
+    alpha: 0.0001
+    beta: 0.75
+
+  - pad: 1
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0x0000.0000.0000.0007
+    data_format: HWC
+    op: conv2d
+    kernel: [3, 3]
+    stride: [1, 1]
+    filters: 384
+
+  - pad: 1
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0x0000.0000.0000.0007
+    data_format: HWC
+    op: conv2d
+    kernel: [3, 3]
+    stride: [1, 1]
+    filters: 384
+
+  - pad: 1
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0x0000.0000.0000.0007
+    data_format: HWC
+    op: conv2d
+    kernel: [3, 3]
+    stride: [1, 1]
+    filters: 256
+
+  - pad: 0
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0xffff.ffff.0000.0000
+    op: conv2d
+    kernel: [3, 3]
+    stride: [2, 2]
+    filters: 256
+
+  - pad: 0
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0x0000.000
+
