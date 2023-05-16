@@ -2,8 +2,6 @@
 *
 # Upload only the Jupyter Notebook and the files in the "ai8x" subfolder
 !*.ipynb
-#!.py
-!/ai8x/*.py
-!/ai8x/*.txt
-!/ai8x/*.md
-!/ai8x/*.csv
+!*.py
+!*.yaml
+!/ai8x/
