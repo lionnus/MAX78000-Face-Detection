@@ -36,7 +36,7 @@ from torchvision.io import read_image
 import scipy.io
 
 # Import ai8x specifics
-#import ai8x
+import ai8x
 
 """
 Custom image dataset class
