@@ -4,4 +4,5 @@
 !*.ipynb
 !*.py
 !*.yaml
+!*.sh
 !/ai8x/
