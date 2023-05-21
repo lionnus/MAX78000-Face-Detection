@@ -7,8 +7,8 @@
 ###################################################################################################
 ---
 # CHW configuration for widerfacenet
-arch: WIDERFaceNet
-dataset: WIDERFacesDataset
+arch: widerfacenet
+dataset: widerfaces
 
 layers:
   - pad: 0
