@@ -6,3 +6,4 @@
 !*.yaml
 !*.sh
 !/ai8x/
+/ai8x-memenet/
