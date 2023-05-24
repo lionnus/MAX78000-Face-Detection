@@ -39,8 +39,8 @@ class WIDERFacesDataset(Dataset):
         bboxes = self.annotations[idx]['bboxes']
 
         # Resize image to 128 x 128 and update boundary boxes accordingly
-        bboxes_resized = self.resize_bbox(bboxes, image.shape[1], image.shape[0], 64,64)
-        image = cv2.resize(image, (64,64))
+        bboxes_resized = self.resize_bbox(bboxes, image.shape[1], image.shape[0], 128,128)
+        image = cv2.resize(image, (128,128))
 
         #labels = self.annotations[idx]['labels']
         
@@ -111,13 +111,16 @@ class WIDERFacesDataset(Dataset):
     
     def resize_bbox(self,bboxes, dim_x_init,dim_y_init, dim_x,dim_y):
         bboxes_resized = []
+        #print(bboxes, dim_x_init,dim_y_init, dim_x,dim_y)
         for bbox in bboxes:
             # Calculate the scaling factors for width and height
             scale_x = dim_x / dim_x_init
             scale_y = dim_y / dim_y_init
+            #print(scale_x,scale_y)
             # Convert the coordinates to the new dimensions
             bbox_resized = [ int(bbox[0] * scale_x), int(bbox[1] * scale_y), int(bbox[2] * scale_x), int(bbox[3] * scale_y)]
             bboxes_resized.append(bbox_resized)
+        #print(bboxes_resized)
 
         return bboxes_resized
     
@@ -136,17 +139,13 @@ def widerfaces_get_datasets(data, load_train=True, load_test=True):
     """
     (data_dir, args) = data
 
-    transform = transforms.Compose([
-        #ai8x.normalize(args=args)
-    ])
-
     if load_train:
         print("Loading training dataset")
         train_transform = transforms.Compose([
             #Rescale(256),
             #RandomCrop(224),
-            transforms.ToTensor()
-            #ai8x.normalize()
+            transforms.ToTensor(),
+            ai8x.normalize(args=args)
         ])
 
         train_dataset = WIDERFacesDataset(data_path=os.path.join(data_dir, "widerface", "WIDER_train/images"), transform=train_transform)
@@ -157,9 +156,8 @@ def widerfaces_get_datasets(data, load_train=True, load_test=True):
         test_transform = transforms.Compose([
             #Rescale(256),
             #RandomCrop(224),
-            transforms.ToTensor()
-            
-            #ai8x.normalize()
+            transforms.ToTensor(),
+            ai8x.normalize(args=args)
         ])
         # Load validation dataset instead of test dataset, since test dataset is unlabeled
         test_dataset = WIDERFacesDataset(data_path=os.path.join(data_dir, "widerface", "WIDER_val/images"), transform=test_transform)
@@ -172,7 +170,7 @@ def widerfaces_get_datasets(data, load_train=True, load_test=True):
 datasets = [
     {
         'name': 'widerfaces',
-        'input': (3, 64, 64),
+        'input': (3, 128, 128),
         'output': [('x', float), ('y', float), ('w', float), ('h', float)],
         'regression': True,
         'loader': widerfaces_get_datasets,
