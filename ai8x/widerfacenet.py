@@ -27,10 +27,7 @@ class WIDERFaceNet(nn.Module):
         # Set dimensions for calculation of linear layer width
         dim_x, dim_y = dimensions
  
-        self.conv1 = ai8x.FusedMaxPoolConv2dReLU(num_channels, 64, kernel_size=3, pool_size=2, pool_stride=2, padding=1, bias=bias, **kwargs)
-        dim_x = conv_shape(x=dim_x, k=3, p=1, s=2, d=1)
-        dim_y = conv_shape(x=dim_y, k=3, p=1, s=2, d=1)
-        print('L1: Dim_x:',dim_x,'Dim_y:', dim_y) 
+        self.conv1 = ai8x.FusedConv2dReLU(num_channels, 64, kernel_size=3, pool_size=2, pool_stride=2, padding=1, bias=bias, **kwargs)
 
         self.conv2 = ai8x.FusedMaxPoolConv2dReLU(64, 32, kernel_size=3, pool_size=2, pool_stride=2, padding=1, bias=bias, **kwargs)
         dim_x = conv_shape(dim_x, k=3, p=1, s=2, d=1)
@@ -47,6 +44,11 @@ class WIDERFaceNet(nn.Module):
         dim_y = conv_shape(dim_y, k=3, p=1, s=2, d=1)
         print('L4: Dim_x:',dim_x,'Dim_y:', dim_y) 
 
+        self.conv5 = ai8x.MaxPool2d(kernel_size=2, stride=2)
+        dim_x = conv_shape(dim_x, k=3, p=1, s=2, d=1)
+        dim_y = conv_shape(dim_y, k=3, p=1, s=2, d=1)
+        print('L4: Dim_x:',dim_x,'Dim_y:', dim_y)
+
         self.fc1 = ai8x.FusedLinearReLU(8 *dim_x*dim_y, 32)
 
         self.fc2 = ai8x.Linear(32, 4)
@@ -56,6 +58,7 @@ class WIDERFaceNet(nn.Module):
         x = self.conv2(x)
         x = self.conv3(x)
         x = self.conv4(x)
+        x = self.conv5(x)
 
         x = x.view(x.size(0), -1)
 
