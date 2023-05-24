@@ -43,11 +43,11 @@ To get started with this project, follow these steps:
 
    - Evaluate the model in the `ai8x-training` environment:
 
-   `python train.py --model widerfacenet --dataset widerfaces -evaluate --save-sample 10 --exp-load-weights-from ../ai8x-synthesis/trained/widerfacenet_trained-q.pth.tar --device MAX78000 "$@"`
+   `python train.py --model widerfacenet --dataset widerfaces --evaluate --save-sample 10 --exp-load-weights-from ../ai8x-synthesis/trained/widerfacenet-trained-q.pth.tar --device MAX78000 "$@"`
 
    - Then, synthesize in the `ai8x-synthesize` environment with:
 
-   `python ai8xize.py --test-dir synthed_net --prefix memenet --checkpoint-file trained/memenet_trained-q.pth.tar --config-file networks/memenet.yaml  --sample-input tests/sample_memes.npy --softmax --device MAX78000 --compact-data  --mexpress --timer 0 --display-checkpoint --verbose --overwrite "$@"`
+   `python ai8xize.py --test-dir synthed_net --prefix widerfacenet --checkpoint-file trained/widerfacenet-trained-q.pth.tar --config-file networks/widerfacenet.yaml  --sample-input tests/sample_widerfaces.npy --softmax --device MAX78000 --compact-data  --mexpress --timer 0 --display-checkpoint --verbose --overwrite "$@"`
 
 5. Deploy on Maxim7800:
 
