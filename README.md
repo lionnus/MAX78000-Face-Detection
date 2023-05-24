@@ -35,13 +35,17 @@ To get started with this project, follow these steps:
 
    `python train.py --lr 0.001 --optimizer adam --epochs 50 --batch-size 40 --deterministic --compress policies/schedule.yaml --qat-policy policies/qat_policy_widerfacenet.yaml --model widerfacenet --dataset widerfaces  --param-hist --device MAX78000 "$@"`
 
-4. Synthesize the model:
+4. Quantize, evaluate, and synthesize the model:
 
-   - Next, in the `ai8x-synthesis` environment quantize the model for the MAXIM7800 with the following command:
+   - In the `ai8x-synthesis` environment quantize the model for the MAXIM7800 with the following command:
 
    `python quantize.py trained/widerfacenet_trained.tar trained/widerfacenet_trained-q.pth.tar --device MAX78000 -v "$@"`
 
-   - synthesize with:
+   - Evaluate the model in the `ai8x-training` environment:
+
+   `python train.py --model widerfacenet --dataset widerfaces -evaluate --save-sample 10 --exp-load-weights-from ../ai8x-synthesis/trained/widerfacenet_trained-q.pth.tar --device MAX78000 "$@"`
+
+   - Then, synthesize in the `ai8x-synthesize` environment with:
 
    `python ai8xize.py --test-dir synthed_net --prefix memenet --checkpoint-file trained/memenet_trained-q.pth.tar --config-file networks/memenet.yaml  --sample-input tests/sample_memes.npy --softmax --device MAX78000 --compact-data  --mexpress --timer 0 --display-checkpoint --verbose --overwrite "$@"`
 
