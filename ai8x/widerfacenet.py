@@ -27,7 +27,7 @@ class WIDERFaceNet(nn.Module):
         # Set dimensions for calculation of linear layer width
         dim_x, dim_y = dimensions
  
-        self.conv1 = ai8x.FusedConv2dReLU(num_channels, 64, kernel_size=3, pool_size=2, pool_stride=2, padding=1, bias=bias, **kwargs)
+        self.conv1 = ai8x.FusedConv2dReLU(num_channels, 64, kernel_size=3, padding=1, bias=bias, **kwargs)
 
         self.conv2 = ai8x.FusedMaxPoolConv2dReLU(64, 32, kernel_size=3, pool_size=2, pool_stride=2, padding=1, bias=bias, **kwargs)
         dim_x = conv_shape(dim_x, k=3, p=1, s=2, d=1)
