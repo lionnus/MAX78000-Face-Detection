@@ -1,0 +1,91 @@
+###################################################################################################
+# WIDER Faces Net CHW Configuration
+# Lionnus Kesting
+# Machine Learning on Microcontrollers
+# 2023 - ETH Zurich
+###################################################################################################
+---
+# CHW configuration for widerfacenet
+arch: widerfacenet
+dataset: widerfaces
+
+layers:
+# +++++++++++++++++++++ layer 0:
+# input 128x128x3:  ai8x.FusedConv2dReLU(3, 32, k=3, pad=1)
+  - op: conv2d
+    pad: 1
+    kernel_size: 3x3
+    activate: ReLU
+    out_offset: 0x1000
+    processors: 0x0000.0000.0000.0007 #3 input channels
+    data_format: HWC
+# +++++++++++++++++++++ layer 1:
+# ai8x.FusedMaxPoolConv2dReLU(32, 64,
+# k=3, pad=0, pool_size=3, pool_stride=2)
+  - op: conv2d
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0xffff.ffff.ffff.ffff
+    pad: 1
+    kernel_size: 3x3
+# +++++++++++++++++++++ layer 2:
+# ai8x.FusedMaxPoolConv2dReLU(64, 64,
+# k=3, pad=0, pool_size=3, pool_stride=2)
+  - op: conv2d
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0xffff.ffff.0000.0000
+    pad: 1
+    kernel_size: 3x3
+# +++++++++++++++++++++ layer 3:
+# ai8x.FusedMaxPoolConv2dReLU(64, 112
+# k=1, pad=0, pool_size=2, pool_stride=2)
+  - op: conv2d
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0x0000.0000.ffff.0000
+    pad: 1
+    kernel_size: 3x3
+# +++++++++++++++++++++ layer 4:
+# ai8x.FusedConv2d(112, 112
+# k=3, pad=0)
+  - op: conv2d
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0x0000.0000.ffff.0000
+    pad: 1
+    kernel_size: 3x3
+# +++++++++++++++++++++ layer 5:
+# ai8x.FusedConv2dReLU(112, 112
+# k=3, pad=0)
+  - op: conv2d
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0x0000.0000.ffff.0000
+    pad: 1
+    kernel_size: 3x3
+# +++++++++++++++++++++ layer 5:
+# ai8x.FusedLinearReLU(8*8*8, 32) ->
+# processors=channels before flattening=8
+  - op: mlp
+    activation: ReLU
+    out_offset: 0
+    flatten: True
+    processors: 0xffff.ffff.ffff.ffff
+# +++++++++++++++++++++ layer 6:
+#  ai8x.Linear(32, 4)
+  - op: mlp
+    activation: None
+    out_offset: 0x2000
+    output_width: 32
+    processors: 0x0000.0000.ffff.ffff
