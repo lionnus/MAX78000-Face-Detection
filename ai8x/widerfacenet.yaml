@@ -67,7 +67,7 @@ layers:
     activation: ReLU
     out_offset: 0
     flatten: True
-    processors: 0x00ff.ffff.ffff.ffff
+    processors: 0xffff.ffff.ffff.ffff
 # +++++++++++++++++++++ layer 6:
 #  ai8x.Linear(32, 4)
   - op: mlp
