@@ -45,7 +45,7 @@ class WIDERFacesDataset(Dataset):
         image = cv2.resize(image, (48,48))
 
         # Convert bboxes to floats and normalize to [0,1]
-        bboxes = [float(i) for i in bboxes_resized[0]]
+        bboxes = [float(i)/48 for i in bboxes_resized[0]]
         
         # Create face (class) labels with way too complicated logic
         one_hot_face_label = [0,0]

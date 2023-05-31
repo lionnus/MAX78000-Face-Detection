@@ -43,9 +43,9 @@ class WIDERFaceONet(nn.Module):
         dim_x = conv_shape(dim_x, k=3, p=0, s=1, d=1) # Conv2d
         # print("dDimensions after third layer: ", dim_x)
        
-        # +++++++++++++++++++++ layer 3-5:
+        # +++++++++++++++++++++ layer 3:
         # Conv2d with 3x3 kernel since 2x2 kernel is not supported by ai8x
-        self.conv4 = ai8x.FusedMaxPoolConv2d(64,256, kernel_size=3, pool_size=2, pool_stride=2, padding=0, bias=bias, **kwargs)
+        self.conv4 = ai8x.FusedMaxPoolConv2d(64,128, kernel_size=3, pool_size=2, pool_stride=2, padding=0, bias=bias, **kwargs)
        
         dim_x = conv_shape(dim_x, k=2, s=2) # Maxpool
         dim_x = conv_shape(dim_x, k=3, p=0, s=1, d=1) # Conv2d
@@ -53,12 +53,9 @@ class WIDERFaceONet(nn.Module):
 
         dim_y=dim_x #change when not square!
         # print("dDimensions for linear layer: ", 256*dim_x*dim_y)
-        self.fc1 = ai8x.FusedLinearReLU(256*dim_x*dim_y, 256)
+        self.fc1 = ai8x.FusedLinearReLU(128*dim_x*dim_y, 64)
 
-        self.sf_out_cls = ai8x.Linear(256, 1)
-       # self.sf_out_cls = nn.Softmax(dim=1)
-
-        self.out_bbox = ai8x.Linear(256, 4)
+        self.fc2 = ai8x.Linear(64, 5)
 
     def forward(self, x):
         # print("Dimensions before first layer: ", x.shape)
@@ -77,14 +74,10 @@ class WIDERFaceONet(nn.Module):
         x = x.view(x.size(0), -1)
         # print(self.num_flat_features(x))
         x = self.fc1(x)
-        
-        # out_cls = self.fc2(x)
-        out_cls = self.sf_out_cls(x)
+      
+        x = self.fc2(x)
 
-        out_bbox = self.out_bbox(x)
-        # print("Tensor type: ", type(out_bbox), type(out_cls))
-        # print("Tensors shape: ", out_bbox.shape, out_cls.shape)
-        return torch.cat((out_bbox, out_cls),dim=1)
+        return x
 
 def widerfacenet(pretrained=False, **kwargs):
     """

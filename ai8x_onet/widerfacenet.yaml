@@ -17,7 +17,7 @@ layers:
     kernel_size: 3x3
     activate: ReLU
     out_offset: 0x1000
-    processors: 0x0000.0000.0000.0007 #3 input channels
+    processors: 0x0000.0000.0000.0007 #3 input channels in HWC
     data_format: HWC
 # +++++++++++++++++++++ layer 1:
 # ai8x.FusedMaxPoolConv2dReLU(32, 64,
@@ -27,8 +27,8 @@ layers:
     pool_stride: 2
     activate: ReLU
     out_offset: 0
-    processors: 0xffff.ffff.ffff.ffff
-    pad: 1
+    processors: 0xffff.ffff.0000.0000
+    pad: 0
     kernel_size: 3x3
 # +++++++++++++++++++++ layer 2:
 # ai8x.FusedMaxPoolConv2dReLU(64, 64,
@@ -38,54 +38,32 @@ layers:
     pool_stride: 2
     activate: ReLU
     out_offset: 0x2000
-    processors: 0xffff.ffff.0000.0000
-    pad: 1
+    processors: 0xffff.ffff.ffff.ffff
+    pad: 0
     kernel_size: 3x3
 # +++++++++++++++++++++ layer 3:
-# ai8x.FusedMaxPoolConv2dReLU(64, 112
+# ai8x.FusedMaxPoolConv2dReLU(64, 128
 # k=1, pad=0, pool_size=2, pool_stride=2)
   - op: conv2d
-    max_pool: 3
+    max_pool: 2
     pool_stride: 2
     activate: ReLU
     out_offset: 0
-    processors: 0x0000.0000.ffff.0000
-    pad: 1
+    processors: 0xffff.ffff.ffff.ffff
+    pad: 0
     kernel_size: 3x3
 # +++++++++++++++++++++ layer 4:
-# ai8x.FusedConv2d(112, 112
-# k=3, pad=0)
-  - op: conv2d
-    max_pool: 3
-    pool_stride: 2
-    activate: ReLU
-    out_offset: 0
-    processors: 0x0000.0000.ffff.0000
-    pad: 1
-    kernel_size: 3x3
-# +++++++++++++++++++++ layer 5:
-# ai8x.FusedConv2dReLU(112, 112
-# k=3, pad=0)
-  - op: conv2d
-    max_pool: 3
-    pool_stride: 2
-    activate: ReLU
-    out_offset: 0
-    processors: 0x0000.0000.ffff.0000
-    pad: 1
-    kernel_size: 3x3
-# +++++++++++++++++++++ layer 5:
-# ai8x.FusedLinearReLU(8*8*8, 32) ->
+# ai8x.FusedLinearReLU(1024, 64) ->
 # processors=channels before flattening=8
-  - op: mlp
+  - op: linear
     activation: ReLU
-    out_offset: 0
+    out_offset: 0x2000
     flatten: True
     processors: 0xffff.ffff.ffff.ffff
-# +++++++++++++++++++++ layer 6:
-#  ai8x.Linear(32, 4)
-  - op: mlp
+# +++++++++++++++++++++ layer 5:
+#  ai8x.Linear(64,5)
+  - op: linear
     activation: None
-    out_offset: 0x2000
+    out_offset: 0x0000
     output_width: 32
-    processors: 0x0000.0000.ffff.ffff
+    processors: 0xffff.ffff.ffff.ffff
