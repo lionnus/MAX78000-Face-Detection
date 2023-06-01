@@ -1,5 +1,12 @@
 # Exclude everything
-*
+*.jpg
+/ai8x-memenet/
+/Camera_MAXIM7800/
+/models/
+/Submission_example
+/widerface/
+*.pptx#
+
 # Upload only the Jupyter Notebook and the files in the "ai8x" subfolder
 !*.ipynb
 !*.py
@@ -9,5 +16,5 @@
 !/ai8x_onet/
 # Include all files with arbitrary extension in this folder
 !*/synthed_net/**
+utils.py
 
-/ai8x-memenet/
