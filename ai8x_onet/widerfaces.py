@@ -41,23 +41,31 @@ class WIDERFacesDataset(Dataset):
         
         
     def __len__(self):
+        """	
+        Return the total number of annotations in the dataset.	
+        """
         return len(self.annotations)
     
     def __getitem__(self, idx):
+        """	
+        Get the image, bounding box, and face label at the given index.	
+        """
         image_path = os.path.join(self.data_path, self.annotations[idx]['image'])
         image = self.load_image(image_path)
         
         bboxes = self.annotations[idx]['bboxes']
         face_label = self.annotations[idx]['labels']['faces']
+        	
         # Resize image and bbox if the face is too small	
-        image, bboxes = self.square_crop_around_bbox(image, bboxes[0])
-
-        # Resize image to 48 x 48 and update boundary boxes accordingly
-        bboxes_resized = self.resize_bbox(bboxes, image.shape[1], image.shape[0], 48,48)
-        image = cv2.resize(image, (48,48))
+        image_cropped, bboxes_cropped = self.square_crop_around_bbox(image, bboxes)	
+        # image_cropped, bboxes_cropped = image, bboxes	
+        	
+        # Resize image to 48 x48 and update boundary boxes accordingly	
+        bboxes_resized = self.resize_bbox(bboxes_cropped, image_cropped.shape[1], image_cropped.shape[0], 48, 48)	
+        image_resized = cv2.resize(image_cropped, (48,48))
 
         # Convert bboxes to floats and normalize to [0,1]
-        bboxes = [float(i)/48 for i in bboxes_resized[0]]
+        bboxes_norm = [float(i)/48 for i in bboxes_resized[0]]
         
         # Create face (class) labels with way too complicated logic
         one_hot_face_label = [0,0]
@@ -65,13 +73,13 @@ class WIDERFacesDataset(Dataset):
         one_hot_face_label[1] = float(face_label == 1) # [0,1] for face_label == 0
         one_hot_face_label = torch.tensor([one_hot_face_label])
 
-        # Target tensor with botch bboxes and face labels
-        target = torch.tensor(bboxes + [float(face_label)])
+        # Target tensor with both bboxes and face labels
+        target = torch.tensor(bboxes_norm + [float(face_label)])
         
         if self.transform:
-            image = self.transform(image)
+            image_transformed = self.transform(image_resized)
 
-        return image, target
+        return image_transformed, target
     
     def load_data(self):
         annotations = []
@@ -133,57 +141,56 @@ class WIDERFacesDataset(Dataset):
                 i += 1
 
         return data, annotations
-    def square_crop_around_bbox(self, image, bbox, min_ratio=0.15, max_ratio=0.8):	
-        image_height, image_width, _ = image.shape	
-        bbox_x = bbox[0]	
-        bbox_y = bbox[1]	
-        bbox_width = bbox[2]	
-        bbox_height = bbox[3]	
-        # Dont do anything if the bbox is empty	
-        if (bbox_width == 0 or bbox_height == 0):	
-            return image, [bbox]	
-            
-        # Calculate the ratio of bbox width or height to the smallest image dimension	
-        ratio = min(bbox_width / image_width, bbox_height / image_height)	
-            
-        # print("Image Dimensions: ", image_width, "x", image_height)	
-        # print("Bounding Box Dimensions: ", bbox_width, "x", bbox_height)	
-        # print("Bounding Box Ratio: ", ratio)	
-        # Check if the ratio is smaller than the threshold	
-        # if ratio < min_ratio:	
-        #     print("Found image with ratio smaller than the minimum threshold: ", ratio)	
-        proposed_width = random.randint(int(bbox_width / max_ratio), int(bbox_width / min_ratio))	
-        proposed_height = random.randint(int(bbox_height / max_ratio), int(bbox_height / min_ratio))	
-        # Make images square whilst we're at it	
-        min_new_dim = min(proposed_width, proposed_height)	
-        new_width = min_new_dim if min_new_dim > bbox_width else proposed_width	
-        new_height = min_new_dim if min_new_dim > bbox_height else proposed_height	
-        # Calculate the offsets	
-        # print("Min x_offset: ", max(0,bbox_x+bbox_width-new_width), "Max x_offset: ", bbox_x-1)	
-        x_offset = random.randint(max(0,bbox_x+bbox_width-new_width), bbox_x)	
-        # print("Min y_offset: ", max(0,bbox_y+bbox_height-new_height), "Max y_offset: ", bbox_y-1)	
-        y_offset = random.randint(max(0,bbox_y+bbox_height-new_height), bbox_y)	
-        # print("Offsets: ", x_offset, y_offset)	
-        # Perform the cropping operation	
-        cropped_image = image[y_offset:y_offset + new_height, x_offset:x_offset + new_width]	
-        bbox[0] -= x_offset	
-        bbox[1] -= y_offset	
-            
-        # print("New minimum ratio: ", min(bbox_width / new_width, bbox_height / new_height))	
-        return cropped_image, [bbox]
+    def square_crop_around_bbox(self,image, bboxes, min_ratio=0.1, max_ratio=0.8):
+        """
+        Perform square cropping randomly around the given bounding box in the image whilst making sure the face is big enough to detect features.
+        """
+        bbox = bboxes[0]
+        image_height, image_width, _ = image.shape
+        bbox_x, bbox_y, bbox_width, bbox_height = bbox[0], bbox[1], bbox[2], bbox[3]
+        
+        if bbox_width == 0 or bbox_height == 0:
+            # print("Background sample, no processing needed.")
+            return image, bboxes
+        # Check for weird bbox dimensions
+        if (max(bboxes[0][2],bboxes[0][3])>min(image_width,image_height)):
+            # print("Bbox dimension bigger than image dimension, no squaring possible.")
+            return image, bboxes
+        
+        min_curr_dim = min(image_width, image_height)
+        min_new_dim = min(min_curr_dim, int(max(bbox_width, bbox_height)/max_ratio))
+        max_new_dim = min(min_curr_dim, int(max(bbox_width, bbox_height)/min_ratio))
+        new_dim = random.randint(min_new_dim, max_new_dim)
+        
+        x_offset = random.randint(max(0, bbox_x + bbox_width - new_dim), bbox_x)
+        y_offset = random.randint(max(0, bbox_y + bbox_height - new_dim), bbox_y)
+        
+        cropped_image = image[y_offset:y_offset + new_dim, x_offset:x_offset + new_dim]
+        bbox_offset = [bbox_x - x_offset, bbox_y - y_offset, bbox_width, bbox_height]
 
-    def resize_bbox(self,bboxes, dim_x_init,dim_y_init, dim_x,dim_y):
+        return cropped_image, [bbox_offset]
+    
+    def resize_bbox(self, bboxes, dim_x_init, dim_y_init, dim_x, dim_y):
+        """
+        Resize the bounding boxes to the new dimensions.
+        """
+        if bboxes[0][2] == 0 or bboxes[0][3] == 0:
+            # print("Background sample, no processing needed.")
+            return bboxes
+        
         bboxes_resized = []
-        #print(bboxes, dim_x_init,dim_y_init, dim_x,dim_y)
+        
         for bbox in bboxes:
-            # Calculate the scaling factors for width and height
             scale_x = dim_x / dim_x_init
             scale_y = dim_y / dim_y_init
-            #print(scale_x,scale_y)
-            # Convert the coordinates to the new dimensions
-            bbox_resized = [ int(bbox[0] * scale_x), int(bbox[1] * scale_y), int(bbox[2] * scale_x), int(bbox[3] * scale_y)]
+            bbox_resized = [
+                int(bbox[0] * scale_x),
+                int(bbox[1] * scale_y),
+                int(bbox[2] * scale_x),
+                int(bbox[3] * scale_y)
+            ]
             bboxes_resized.append(bbox_resized)
-        #print(bboxes_resized)
+        # print('New boundary box ratio:', bboxes_resized[0][2] / bboxes_resized[0][3])
 
         return bboxes_resized
     
