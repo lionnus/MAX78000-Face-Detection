@@ -63,9 +63,12 @@ class WIDERFacesDataset(Dataset):
         # Resize image to 48 x48 and update boundary boxes accordingly	
         bboxes_resized = self.resize_bbox(bboxes_cropped, image_cropped.shape[1], image_cropped.shape[0], 48, 48)	
         image_resized = cv2.resize(image_cropped, (48,48))
+        
+        # Flip images and boundary boxes
+        image_flipped, bboxes_flipped = self.random_flip(image_resized, bboxes_resized)
 
         # Convert bboxes to floats and normalize to [0,1]
-        bboxes_norm = [float(i)/48 for i in bboxes_resized[0]]
+        bboxes_norm = [float(i)/48 for i in bboxes_flipped[0]]
         
         # Create face (class) labels with way too complicated logic
         one_hot_face_label = [0,0]
@@ -77,7 +80,7 @@ class WIDERFacesDataset(Dataset):
         target = torch.tensor(bboxes_norm + [float(face_label)])
         
         if self.transform:
-            image_transformed = self.transform(image_resized)
+            image_transformed = self.transform(image_flipped)
 
         return image_transformed, target
     
@@ -141,6 +144,24 @@ class WIDERFacesDataset(Dataset):
                 i += 1
 
         return data, annotations
+    
+    def random_flip(self, image, bboxes):
+        """
+        Randomly flip the image and update the bounding box coordinates accordingly.
+        """
+        bbox = bboxes[0]
+        _ , image_width, _ = image.shape
+        bbox_x, bbox_y, bbox_width, bbox_height = bbox[0], bbox[1], bbox[2], bbox[3]
+
+        # Randomly flip image
+        if random.random() > 0.5:
+            image = cv2.flip(image, 1)
+            #Flip bbox coordinates
+            if bbox_width != 0 or bbox_height != 0:
+                bbox[0] = image_width - bbox_x - bbox_width
+
+        return image, [bbox]
+    
     def square_crop_around_bbox(self,image, bboxes, min_ratio=0.1, max_ratio=0.8):
         """
         Perform square cropping randomly around the given bounding box in the image whilst making sure the face is big enough to detect features.
