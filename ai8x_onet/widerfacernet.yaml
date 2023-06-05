@@ -1,0 +1,58 @@
+###################################################################################################
+# WIDER Faces Net CHW Configuration
+# Lionnus Kesting
+# Machine Learning on Microcontrollers
+# 2023 - ETH Zurich
+###################################################################################################
+---
+# CHW configuration for widerfacenet
+arch: widerfacernet
+dataset: widerfaces
+
+layers:
+# +++++++++++++++++++++ layer 0:
+# input 128x128x3:  ai8x.FusedConv2dReLU(3, 28, k=3, pad=1)
+  - op: conv2d
+    pad: 1
+    kernel_size: 3x3
+    activate: ReLU
+    out_offset: 0x1000
+    processors: 0x0000.0000.0000.0007 #3 input channels in HWC
+    data_format: HWC
+# +++++++++++++++++++++ layer 1:
+# ai8x.FusedMaxPoolConv2dReLU(28, 48,
+# k=3, pad=0, pool_size=3, pool_stride=2)
+  - op: conv2d
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0
+    processors: 0x0fff.ffff.0000.0000
+    pad: 0
+    kernel_size: 3x3
+# +++++++++++++++++++++ layer 2:
+# ai8x.FusedMaxPoolConv2dReLU(48, 64,
+# k=3, pad=0, pool_size=3, pool_stride=2)
+  - op: conv2d
+    max_pool: 3
+    pool_stride: 2
+    activate: ReLU
+    out_offset: 0x2000
+    processors: 0xffff.ffff.ffff.0000
+    pad: 0
+    kernel_size: 3x3
+# +++++++++++++++++++++ layer 3:
+# ai8x.FusedLinearReLU(x, 128) ->
+# processors=channels before flattening=8
+  - op: linear
+    activation: ReLU
+    out_offset: 0x2000
+    flatten: True
+    processors: 0xffff.ffff.ffff.ffff
+# +++++++++++++++++++++ layer 4:
+#  ai8x.Linear(128,5)
+  - op: linear
+    activation: None
+    out_offset: 0x0000
+    output_width: 32
+    processors: 0xffff.ffff.ffff.ffff
