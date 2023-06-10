@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# Copy widerfacenet.yaml to /maxim7800-face-detection/ai8x/Exercise8/ai8x-synthesis/networks
-cp ./ai8x_onet/widerfacenet.yaml ../Exercise8/ai8x-synthesis/networks/
+# Copy widerfaceonet.yaml to /maxim7800-face-detection/ai8x/Exercise8/ai8x-synthesis/networks
+cp ./ai8x_onet/widerfaceonet.yaml ../Exercise8/ai8x-synthesis/networks/
 
-# Copy wider_face_net.py to /Exercise8/ai8x-training/model
+# Copy widerfacernet.yaml to /maxim7800-face-detection/ai8x/Exercise8/ai8x-synthesis/networks
+cp ./ai8x_onet/widerfacernet.yaml ../Exercise8/ai8x-synthesis/networks/
+
+# Copy widerfaceonet.py to /Exercise8/ai8x-training/model
 cp ./ai8x_onet/widerfacenet.py ../Exercise8/ai8x-training/models/
 
 # Copy wider_faces.py to /Exercise8/ai8x-training/dataset
