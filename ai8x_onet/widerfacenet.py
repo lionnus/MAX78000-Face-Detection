@@ -21,7 +21,7 @@ def conv_shape(x, k=1, p=0, s=1, d=1):
     return int((x + 2*p - d*(k - 1) - 1)/s + 1)
 
 class WIDERFaceONet(nn.Module):
-    def __init__(self, num_channels=3, num_classes=2, dimensions = (48,48), bias=False, **kwargs):
+    def __init__(self, num_channels=3, num_classes=2, dimensions = (48,48), bias=True, **kwargs):
         super().__init__()
         # +++++++++++++++++++++ layer 0:
         self.conv1 = ai8x.FusedConv2dReLU(num_channels, 32, kernel_size=3, padding=1, bias=bias, **kwargs)
@@ -80,31 +80,32 @@ class WIDERFaceONet(nn.Module):
         return x
     
 class WIDERFaceRNet(nn.Module):
-    def __init__(self, num_channels=3, num_classes=2, dimensions = (24,24), bias=False, **kwargs):
+    def __init__(self, num_channels=3, num_classes=2, dimensions = (48,48), bias=True, **kwargs):
         super().__init__()
         # +++++++++++++++++++++ layer 0:
-        self.conv1 = ai8x.FusedConv2dReLU(num_channels, 28, kernel_size=3, padding=1, bias=bias, **kwargs)
-    
-        dim_x = conv_shape(dimensions[0], k=3, p=1, s=1, d=1) # Conv2d
-        # print("dDimensions after first layer: ", dim_x)
+        self.conv1 = ai8x.FusedAvgPoolConv2dReLU(num_channels, 28, kernel_size=3,pool_size=2, pool_stride=2, padding=1, bias=bias, **kwargs)
+        dim_x=dimensions[0]
+        dim_x = conv_shape(dim_x, k=3, s=2) # Avgpool -> Change dimensions to 24x24
+        dim_x = conv_shape(dim_x, k=3, p=1, s=1, d=1) # Conv2d
+        print("dDimensions after first layer: ", dim_x)
 
         # +++++++++++++++++++++ layer 1:
         self.conv2 = ai8x.FusedMaxPoolConv2dReLU(28, 48, kernel_size=3, pool_size=3, pool_stride=2, padding=0, bias=bias, **kwargs)
 
         dim_x = conv_shape(dim_x, k=3, s=2) # Maxpool
         dim_x = conv_shape(dim_x, k=3, p=0, s=1, d=1) # Conv2d
-        # print("dDimensions after second layer: ", dim_x)
+        print("dDimensions after second layer: ", dim_x)
 
         # +++++++++++++++++++++ layer 2:
         self.conv3 = ai8x.FusedMaxPoolConv2dReLU(48, 64, kernel_size=3, pool_size=3, pool_stride=2, padding=0, bias=bias, **kwargs)
 
         dim_x = conv_shape(dim_x, k=3, s=2) # Maxpool
         dim_x = conv_shape(dim_x, k=3, p=0, s=1, d=1) # Conv2d
-        # print("dDimensions after third layer: ", dim_x)
+        print("dDimensions after third layer: ", dim_x)
 
         dim_y=dim_x #change when not square!
-        # print("dDimensions for linear layer: ", 256*dim_x*dim_y)
-        self.fc1 = ai8x.FusedLinearReLU(128*dim_x*dim_y, 128)
+        # print("dDimensions for linear layer: ", 64*dim_x*dim_y)
+        self.fc1 = ai8x.FusedLinearReLU(64*dim_x*dim_y, 128)
 
         self.fc2 = ai8x.Linear(128, 5, wide=True)
 
@@ -116,7 +117,7 @@ class WIDERFaceRNet(nn.Module):
         # print("Dimensions after second layer: ", x.shape)
         x = self.conv3(x)
         # print("Dimensions after third layer: ", x.shape)
-        x = self.conv4(x)
+        # x = self.conv4(x)
         # print("Dimensions after fourth layer: ", x.shape)
         # x = self.conv5(x)
         # print("Dimensions after fifth layer: ", x.shape)

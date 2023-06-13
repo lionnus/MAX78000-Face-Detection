@@ -11,9 +11,11 @@ dataset: widerfaces
 
 layers:
 # +++++++++++++++++++++ layer 0:
-# input 128x128x3:  ai8x.FusedConv2dReLU(3, 28, k=3, pad=1)
+# input 48x48x3:  ai8x.FusedAvgPoolConv2dReLU(3, 28, k=3, pad=1)
   - op: conv2d
     pad: 1
+    avg_pool: 2
+    pool_stride: 2
     kernel_size: 3x3
     activate: ReLU
     out_offset: 0x1000
@@ -26,7 +28,7 @@ layers:
     max_pool: 3
     pool_stride: 2
     activate: ReLU
-    out_offset: 0
+    out_offset: 0x0000
     processors: 0x0fff.ffff.0000.0000
     pad: 0
     kernel_size: 3x3
@@ -46,13 +48,13 @@ layers:
 # processors=channels before flattening=8
   - op: linear
     activation: ReLU
-    out_offset: 0x2000
+    out_offset: 0x0000
     flatten: True
     processors: 0xffff.ffff.ffff.ffff
 # +++++++++++++++++++++ layer 4:
 #  ai8x.Linear(128,5)
   - op: linear
     activation: None
-    out_offset: 0x0000
+    out_offset: 0x2000
     output_width: 32
     processors: 0xffff.ffff.ffff.ffff

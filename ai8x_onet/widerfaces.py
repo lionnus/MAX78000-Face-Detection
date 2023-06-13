@@ -68,7 +68,7 @@ class WIDERFacesDataset(Dataset):
         image_flipped, bboxes_flipped = self.random_flip(image_resized, bboxes_resized)
 
         # Convert bboxes to floats and normalize to [0,1]
-        bboxes_norm = [(float(i)/24-1) for i in bboxes_flipped[0]]
+        bboxes_norm = [(float(i)) for i in bboxes_flipped[0]]
         
         # Create face (class) labels with way too complicated logic
         one_hot_face_label = [0,0]
@@ -265,7 +265,7 @@ datasets = [
     {
         'name': 'widerfaces',
         'input': (3, 48, 48),
-        'output': [('x', float), ('y', float), ('w', float), ('h', float), ('no_face', float), ('face', float)],
+        'output': [('x', float), ('y', float), ('w', float), ('h', float), ('face', float)],
         'regression': True,
         'loader': widerfaces_get_datasets,
     },
