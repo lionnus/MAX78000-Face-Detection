@@ -9,6 +9,10 @@
 *.odp*
 **/build*
 **/Eike
+*.jpg
+*.npy
+*.png
+
 
 # Upload only the Jupyter Notebook and the files in the "ai8x" subfolder
 !*.ipynb
@@ -20,4 +24,5 @@
 # Include all files with arbitrary extension in this folder
 !*/synthed_net/**
 utils.py
-
+**/synthed_net/widerfacene*
+**/synthed_net/widerface*net*
