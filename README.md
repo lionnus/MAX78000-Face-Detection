@@ -41,17 +41,17 @@ To get started with this project, follow these steps:
 
    - In the `ai8x-synthesis` environment quantize the model for the MAXIM7800 with the following command:
 
-   `python quantize.py trained/widerfaceonetv2_trained.pth.tar trained/widerfaceonetv2_trained-q.pth.tar --device MAX78000 -v "$@"`
+   `python quantize.py trained/widerfaceonetv4_trained.pth.tar trained/widerfaceonetv4_trained-q.pth.tar --device MAX78000 -v "$@"`
 
    - Evaluate the model in the `ai8x-training` environment:
 
-   `python train.py --model widerfacenet --dataset widerfaces --evaluate --exp-load-weights-from ../ai8x-synthesis/trained/widerfaceonetv2_trained-q.pth.tar --device MAX78000 "$@"` 
+   `python train.py --model widerfaceonet --dataset widerfaces --evaluate --exp-load-weights-from ../ai8x-synthesis/trained/widerfaceonetv4_trained-q.pth.tar --device MAX78000 "$@"` 
   
    **Note:** Removed --save_sample 10 since this gave the interesting error: "WARNING: Cannot save sample in training mode, ignoring --save-sample option. Use with --evaluate instead." The sample `sample_widerfaces.py` can be generated manually in the Jupyter Notebook.
 
    - Then, synthesize in the `ai8x-synthesize` environment with:
 
-   `python ai8xize.py --test-dir synthed_net --prefix widerfacenet --checkpoint-file trained/widerfaceonetv2_trained-q.pth.tar --config-file networks/widerfacenet.yaml  --sample-input tests/sample_widerfaces.npy --device MAX78000 --compact-data  --mexpress --timer 0 --display-checkpoint --verbose "$@" --softmax --board-name FTHR_RevA --overwrite --no-unload` 
+   `python ai8xize.py --test-dir synthed_net --prefix widerfaceonet --checkpoint-file trained/widerfaceonetv4_trained-q.pth.tar --config-file networks/widerfaceonet.yaml  --sample-input tests/sample_widerfaces_testpic3.npy --device MAX78000 --compact-data  --mexpress --timer 0 --display-checkpoint --verbose "$@" --softmax --board-name FTHR_RevA --overwrite --no-unload` 
 
    **Note:** Generate sample_widerfaces.py manually in the Jupyter Notebook.
 
