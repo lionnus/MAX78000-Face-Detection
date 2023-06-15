@@ -34,24 +34,24 @@ To get started with this project, follow these steps:
 
    - Run the training script to train the face detection model using the AI8X framework. Within the `ai8x-training` environment, run:
 
-   `python train.py --lr 0.001 --optimizer adam --epochs 50 --batch-size 40 --deterministic --compress policies/schedule.yaml --qat-policy policies/qat_policy_widerfacenet.yaml --model widerfaceonet --dataset widerfaces  --param-hist --device MAX78000 "$@" --regression --enable-tensorboard`
+   `python train.py --lr 0.001 --optimizer adam --epochs 300 --batch-size 40 --deterministic --compress policies/schedule.yaml --qat-policy policies/qat_policy_widerfacenet.yaml --model widerfaceonet --dataset widerfaces  --param-hist --device MAX78000 "$@" --regression --enable-tensorboard`
 
 4. Quantize, evaluate, and synthesize the model:
    - Go to `ai8x-training/logs` and pick your desired run. Pick the `qat_best.pth.tar` file and rename it to `widerfaceonetv2_trained.pth.tar`. Lastly, place it in the `ai8x-synthesis/trained` directory.
 
    - In the `ai8x-synthesis` environment quantize the model for the MAXIM7800 with the following command:
 
-   `python quantize.py trained/widerfaceonetv4_trained.pth.tar trained/widerfaceonetv4_trained-q.pth.tar --device MAX78000 -v "$@"`
+   `python quantize.py trained/widerfaceonetv5_trained.pth.tar trained/widerfaceonetv5_trained-q.pth.tar --device MAX78000 -v "$@"`
 
    - Evaluate the model in the `ai8x-training` environment:
 
-   `python train.py --model widerfaceonet --dataset widerfaces --evaluate --exp-load-weights-from ../ai8x-synthesis/trained/widerfaceonetv4_trained-q.pth.tar --device MAX78000 "$@"` 
+   `python train.py --model widerfaceonet --dataset widerfaces --evaluate --exp-load-weights-from ../ai8x-synthesis/trained/widerfaceonetv5_trained-q.pth.tar --device MAX78000 "$@"` 
   
    **Note:** Removed --save_sample 10 since this gave the interesting error: "WARNING: Cannot save sample in training mode, ignoring --save-sample option. Use with --evaluate instead." The sample `sample_widerfaces.py` can be generated manually in the Jupyter Notebook.
 
    - Then, synthesize in the `ai8x-synthesize` environment with:
 
-   `python ai8xize.py --test-dir synthed_net --prefix widerfaceonet --checkpoint-file trained/widerfaceonetv4_trained-q.pth.tar --config-file networks/widerfaceonet.yaml  --sample-input tests/sample_widerfaces_testpic3.npy --device MAX78000 --compact-data  --mexpress --timer 0 --display-checkpoint --verbose "$@" --softmax --board-name FTHR_RevA --overwrite --no-unload` 
+   `python ai8xize.py --test-dir synthed_net --prefix widerfaceonet --checkpoint-file trained/widerfaceonetv5_trained-q.pth.tar --config-file networks/widerfaceonet.yaml --device MAX78000 --compact-data  --mexpress --timer 0 --display-checkpoint --verbose "$@" --softmax --board-name FTHR_RevA --overwrite --no-unload --sample-input tests/sample_widerfaces_testpic2.npy` 
 
    **Note:** Generate sample_widerfaces.py manually in the Jupyter Notebook.
 
