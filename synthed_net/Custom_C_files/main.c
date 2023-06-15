@@ -68,14 +68,14 @@ void load_input(void)
 {
 #ifdef USE_SAMPLEDATA
   // This function loads the sample data input -- replace with actual data
-  memcpy32((uint32_t *)0x50400000, input, IMAGE_SIZE_X * IMAGE_SIZE_Y);
+  memcpy32((uint32_t *)0x50401000, input, IMAGE_SIZE_X * IMAGE_SIZE_Y);
 #else // Camera
   uint8_t *frame_buffer;
   uint8_t *buffer;
   uint32_t imgLen;
   uint32_t w, h, x, y;
   uint8_t r, g, b;
-  uint32_t *cnn_mem = (uint32_t *)0x50400000;
+  uint32_t *cnn_mem = (uint32_t *)0x50401000;
   //uint32_t color;
 
   camera_start_capture_image();
@@ -134,7 +134,7 @@ int main(void)
   MXC_Delay(200000);
   /* Enable camera power */
   //Camera_Power(POWER_ON);
-  printf("\n\nFace Detection MAXIM7800 - Lionnus Kesting\n");
+  printf("\n\nFace Detection MAXIM7800 Demo- Lionnus Kesting\n");
   MXC_ICC_Enable(MXC_ICC0); // Enable cache
 
   // Switch to 100 MHz clock
@@ -192,59 +192,36 @@ int main(void)
   cnn_init(); // Bring state machine into consistent state
   cnn_load_weights(); // Load kernels 
 
-//while(1) {
-  cnn_load_bias(); // Not used in this network
-  cnn_configure(); // Configure state machine
-  // TO DO: LOad camera input
-  load_input(); // Load data input
-  LED_On(LED1); // Indicate start of CNN processing
-  cnn_start(); // Start CNN processing
+while(1) {
+	  cnn_load_bias(); // Not used in this network
+	  cnn_configure(); // Configure state machine
+	  // TO DO: LOad camera input
+	  load_input(); // Load data input
+	  LED_On(LED1); // Indicate start of CNN processing
+	  cnn_start(); // Start CNN processing
 
-  while (cnn_time == 0){
-    MXC_LP_EnterSleepMode(); // Wait for CNN
-    //__WFI(); // Wait for CNN -> other method?
-  //}
-  printf("CNN time: %d us\n\n", cnn_time);
-  LED_Off(LED1);
-  
-  cnn_unload((uint32_t *) ml_data);
-  softmax_q17p14_q15((const q31_t *) ml_data, 1, ml_softmax); // Pass face classification flag in softmax
+	  while (cnn_time == 0){
+		MXC_LP_EnterSleepMode(); // Wait for CNN
+		//__WFI(); // Wait for CNN -> other method?
+	  }
+	  printf("CNN time: %d us\n\n", cnn_time);
+	  LED_Off(LED1);
 
-  if (check_output() != CNN_OK) printf("--\nTest inference NOT passed\n--\n");
-  #ifdef CNN_INFERENCE_TIMER
-    printf("Approximate inference time: %u us\n\n", cnn_time);
-  #endif
+	  cnn_unload((uint32_t *) ml_data);
+	  softmax_q17p14_q15((const q31_t *) ml_data, CNN_NUM_OUTPUTS, ml_softmax); // Pass face classification flag in softmax
+	  #ifdef USE_SAMPLEDATA
+	  	  if (check_output() != CNN_OK) printf("--\nTest inference NOT passed\n--\n");
+	  #endif
 
-    cnn_disable(); // Shut down CNN clock, disable peripheral
+	  //cnn_disable(); // Shut down CNN clock, disable peripheral
 
-  // Convert first CNN outputs to coordinate values
-  float bbox[4] = {0};
-  convert_to_bbox((uint32_t *)ml_data, bbox);
-
-  // Convert last CNN output to confidence value
-  float confidence_value = ((float)(1000 * ml_softmax[4] + 0x4000) / 32768.0f);
-  float confidence_value2 = (q17_14_to_float(ml_data[4])+1)*50;
-
-  printf("\nBBOX x: %.2f, y: %.2f, w: %.2f, h: %.2f\n Confidence: %.2f or %.2f\n", bbox[0], bbox[1], bbox[2], bbox[3], confidence_value, confidence_value2);
-
-
-}
-
+		  // Convert first CNN outputs to coordinate values
+	  float bbox[4] = {0};
+	  convert_to_bbox((uint32_t *)ml_data, bbox);
+	  // Convert last CNN output to confidence value
+	  float confidence_value = (q17_14_to_float(ml_data[4]))*100;
+	  printf("\nBBOX x: %.2f, y: %.2f, w: %.2f, h: %.2f\n Confidence: %.2f\n", bbox[0], bbox[1], bbox[2], bbox[3], confidence_value);
+	  MXC_Delay(SEC(1));
+	  }
   return 0;
 }
-
-/*
-  SUMMARY OF OPS
-  Hardware: 13,127,136 ops (12,806,464 macc; 320,672 comp; 0 add; 0 mul; 0 bitwise)
-    Layer 0: 2,064,384 ops (1,990,656 macc; 73,728 comp; 0 add; 0 mul; 0 bitwise)
-    Layer 1: 8,309,088 ops (8,128,512 macc; 180,576 comp; 0 add; 0 mul; 0 bitwise)
-    Layer 2: 2,420,992 ops (2,359,296 macc; 61,696 comp; 0 add; 0 mul; 0 bitwise)
-    Layer 3: 299,520 ops (294,912 macc; 4,608 comp; 0 add; 0 mul; 0 bitwise)
-    Layer 4: 32,832 ops (32,768 macc; 64 comp; 0 add; 0 mul; 0 bitwise)
-    Layer 5: 320 ops (320 macc; 0 comp; 0 add; 0 mul; 0 bitwise)
-
-  RESOURCE USAGE
-  Weight memory: 162,976 bytes out of 442,368 bytes total (36.8%)
-  Bias memory:   0 bytes out of 2,048 bytes total (0.0%)
-*/
-
