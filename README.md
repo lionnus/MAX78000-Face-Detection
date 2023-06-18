@@ -61,7 +61,10 @@ To get started with this project, follow these steps:
    - To enable extra features, e.g. input from camera stream, the generated files have to be changed. Alternatively, the already synthesized files in `synthed_net` in this repository can be flashed.
 
 ## Results
-Nothing yet.
+The project works with some accuracy. Fewexample outputs (retrieved from the generated `sampleoutput.h` file after synthesis), can be seen below for the RNet network. 
+![plot](widerfacernet_samples.png)
+
+The demo can be flashed on a MAXIM7800 FTHR_RevA board with the files in the `Demo/widerfaceonet_vfinal_live` folder. The `live-inference-utils.py` script can be used to communicate with the MAXIM7800 over UART and receive image and boundary box data every second.
 
 ## Contributing
 
