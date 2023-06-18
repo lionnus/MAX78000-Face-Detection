@@ -40,7 +40,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include <math.h>
 #include "mxc.h"
 #include "cnn.h"
 #include "sampledata.h"
@@ -51,13 +50,12 @@
 #include "led.h"
 #include "camera.h"
 #include "config.h"
-#include "utils.h"
 
 volatile uint32_t cnn_time; // Stopwatch
 
 void fail(void)
 {
-  //printf("\n*** FAIL ***\n\n");
+  printf("\n*** FAIL ***\n\n");
   while (1);
 }
 
@@ -66,30 +64,28 @@ void fail(void)
 static const uint32_t input_0[] = SAMPLE_INPUT_0;
 const uint32_t *input = input_0;
 
-//Global variables for camera
-uint8_t *frame_buffer;
-uint32_t imgLen;
-
 void load_input(void)
 {
- // Camera
-  // made global to send after cnn inference
-  // uint8_t *frame_buffer;
-   uint8_t *buffer;
-  // uint32_t imgLen;
-   uint32_t w, h, x, y;
-   uint8_t r, g, b;
-   uint32_t *cnn_mem = (uint32_t *)0x50401000;
+#ifdef USE_SAMPLEDATA
+  // This function loads the sample data input -- replace with actual data
+  memcpy32((uint32_t *)0x50401000, input, IMAGE_SIZE_X * IMAGE_SIZE_Y);
+#else // Camera
+  uint8_t *frame_buffer;
+  uint8_t *buffer;
+  uint32_t imgLen;
+  uint32_t w, h, x, y;
+  uint8_t r, g, b;
+  uint32_t *cnn_mem = (uint32_t *)0x50401000;
   //uint32_t color;
 
-  camera_start_capture_image();  
+  camera_start_capture_image();
 
   while (!camera_is_image_rcv()) {}
 
   camera_get_image(&frame_buffer, &imgLen, &w, &h);
   buffer = frame_buffer;
 
-  //printf("Width:%d Height:%d\n", w, h);
+  printf("Width:%d Height:%d\n", w, h);
 
   for (y = 0; y < h; y++) {
       for (x = 0; x < w; x++) {
@@ -101,6 +97,31 @@ void load_input(void)
           *cnn_mem++ = ((b << 16) | (g << 8) | r) ^ 0x00808080;
 }
 }
+#endif
+}
+// Expected output of layer 5 for widerfacenet given the sample input (known-answer test)
+// Delete this function for production code
+static const uint32_t sample_output[] = SAMPLE_OUTPUT;
+
+int check_output(void)
+{
+  int i;
+  uint32_t mask, len;
+  volatile uint32_t *addr;
+  const uint32_t *ptr = sample_output;
+
+  while ((addr = (volatile uint32_t *) *ptr++) != 0) {
+    mask = *ptr++;
+    len = *ptr++;
+    for (i = 0; i < len; i++)
+      if ((*addr++ & mask) != *ptr++) {
+        printf("Data mismatch (%d/%d) at address 0x%08x: Expected 0x%08x, read 0x%08x.\n",
+               i + 1, len, addr - 1, *(ptr - 1), *(addr - 1) & mask);
+        return CNN_FAIL;
+      }
+  }
+
+  return CNN_OK;
 }
 
 static int32_t ml_data[CNN_NUM_OUTPUTS];
@@ -112,15 +133,15 @@ int main(void)
   // Wait for PMIC 1.8V to become available, about 180ms after power up.
   MXC_Delay(200000);
   /* Enable camera power */
-  Camera_Power(POWER_ON);
-  //printf("\n\nFace Detection MAXIM7800 Demo- Lionnus Kesting\n");
+  //Camera_Power(POWER_ON);
+  printf("\n\nFace Detection MAXIM7800 Demo- Lionnus Kesting\n");
   MXC_ICC_Enable(MXC_ICC0); // Enable cache
 
   // Switch to 100 MHz clock
   MXC_SYS_Clock_Select(MXC_SYS_CLOCK_IPO);
   SystemCoreClockUpdate();
 
-  //printf("Waiting...\n");
+  printf("Waiting...\n");
 
   // DO NOT DELETE THIS LINE:
   MXC_Delay(SEC(2)); // Let debugger interrupt if needed
@@ -138,11 +159,12 @@ int main(void)
     // Setup variables for camera
     int xx = IMAGE_SIZE_X;
     int yy = IMAGE_SIZE_Y;
-    //printf("Camera setup for: x %d  y %d\n", xx, yy);
+    printf("Camera setup for: x %d  y %d\n", xx, yy);
 
+#if !defined(USE_SAMPLEDATA)
     int dma_channel;
     // Initialize camera.
-    //printf("Init Camera...");
+    printf("Init Camera...");
 
     // Initialize DMA for camera interface
     MXC_DMA_Init();
@@ -154,27 +176,23 @@ int main(void)
                            dma_channel);
 
     if (ret != STATUS_OK) {
-        //printf("\tError returned from setting up camera. Error %d\n", ret);
+        printf("\tError returned from setting up camera. Error %d\n", ret);
         return -1;
     }
 
-  // Setup UART Communication
-  mxc_uart_regs_t *ConsoleUart = MXC_UART_GET_UART(CONSOLE_UART);
+#else
+    printf("Using Sample Data!\n");
+#endif
 
-  if ((ret = MXC_UART_Init(ConsoleUart, 115200, MXC_UART_IBRO_CLK)) != E_NO_ERROR) {
-      return ret;
-  }
   // Enable peripheral, enable CNN interrupt, turn on CNN clock
   // CNN clock: APB (50 MHz) div 1
   cnn_enable(MXC_S_GCR_PCLKDIV_CNNCLKSEL_PCLK, MXC_S_GCR_PCLKDIV_CNNCLKDIV_DIV1);
-  //printf("\n*** CNN Inference Test widerfacenet ***\n");
+  printf("\n*** CNN Inference Test widerfacenet ***\n");
     
   cnn_init(); // Bring state machine into consistent state
   cnn_load_weights(); // Load kernels 
 
 while(1) {
-	  cnn_init(); // Bring state machine into consistent state
-	  cnn_load_weights(); // Load kernels
 	  cnn_load_bias(); // Not used in this network
 	  cnn_configure(); // Configure state machine
 	  // TO DO: LOad camera input
@@ -186,28 +204,23 @@ while(1) {
 		MXC_LP_EnterSleepMode(); // Wait for CNN
 		//__WFI(); // Wait for CNN -> other method?
 	  }
-	  //printf("CNN time: %d us\n\n", cnn_time);
+	  printf("CNN time: %d us\n\n", cnn_time);
 	  LED_Off(LED1);
 
 	  cnn_unload((uint32_t *) ml_data);
 	  softmax_q17p14_q15((const q31_t *) ml_data, CNN_NUM_OUTPUTS, ml_softmax); // Pass face classification flag in softmax
+	  #ifdef USE_SAMPLEDATA
+	  	  if (check_output() != CNN_OK) printf("--\nTest inference NOT passed\n--\n");
+	  #endif
 
 	  //cnn_disable(); // Shut down CNN clock, disable peripheral
 
-		// Convert first CNN outputs to coordinate values
-	  float bbox[5] = {0};
+		  // Convert first CNN outputs to coordinate values
+	  float bbox[4] = {0};
 	  convert_to_bbox((uint32_t *)ml_data, bbox);
 	  // Convert last CNN output to confidence value
-	  bbox[4] = (q17_14_to_float(ml_data[4]))*100;
-	  float confidence_value = bbox[4];
-	  //printf("\nBBOX x: %.2f, y: %.2f, w: %.2f, h: %.2f\n Confidence: %.2f\n", bbox[0], bbox[1], bbox[2], bbox[3], confidence_value);
-	//printf("Sending to UART\n");
-	int bbox_rounded[5] = {0};
-	for(int i =0; i<5; i++){
-		bbox_rounded[i]=round(bbox[i]);
-	}
-	utils_send_img_to_pc(frame_buffer, imgLen, xx, yy, bbox_rounded, camera_get_pixel_format());
-
+	  float confidence_value = (q17_14_to_float(ml_data[4]))*100;
+	  printf("\nBBOX x: %.2f, y: %.2f, w: %.2f, h: %.2f\n Confidence: %.2f\n", bbox[0], bbox[1], bbox[2], bbox[3], confidence_value);
 	  MXC_Delay(SEC(1));
 	  }
   return 0;

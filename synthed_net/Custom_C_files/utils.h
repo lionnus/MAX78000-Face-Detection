@@ -44,8 +44,8 @@
 void utils_delay_ms(uint32_t ms);
 uint32_t utils_get_time_ms(void);
 void utils_hexDump(const char *title, uint8_t *buf, uint32_t len);
-int utils_send_img_to_pc(uint8_t *img, uint32_t imgLen, int w, int h, uint8_t *pixelformat);
-int utils_stream_img_to_pc_init(uint8_t *img, uint32_t imgLen, int w, int h, uint32_t bbox_x, uint32_t bbox_y, uint32_t bbox_w, uint32_t bbox_h, uint32_t bbox_prob, uint8_t *pixelformat);
+int utils_send_img_to_pc(uint8_t *img, uint32_t imgLen, int w, int h, int bbox[5], uint8_t *pixelformat);
+int utils_stream_img_to_pc_init(uint8_t *img, uint32_t imgLen, int w, int h, uint8_t *pixelformat);
 int utils_stream_image_row_to_pc(uint8_t *img, uint32_t imgRowLen);
 
 #endif // EXAMPLES_MAX78000_CAMERAIF_UTILS_H_

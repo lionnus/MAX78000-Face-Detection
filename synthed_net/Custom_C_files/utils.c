@@ -81,12 +81,12 @@ static void utils_send_bytes(mxc_uart_regs_t *uart, uint8_t *ptr, int length)
     }
 }
 
-int utils_send_img_to_pc(uint8_t *img, uint32_t imgLen, int w, int h, float bbox_x, float bbox_y, float bbox_w, float bbox_h, float bbox_prob, uint8_t *pixelformat)
+int utils_send_img_to_pc(uint8_t *img, uint32_t imgLen, int w, int h, int bbox[5], uint8_t *pixelformat)
 {
     int len;
 
     // Transmit the start token
-    len = 25;
+    len = 5;
     utils_send_bytes(DEBUG_COMPORT, (uint8_t *) "New image\n", 10);
 
     // Transmit the width of the image
@@ -96,18 +96,16 @@ int utils_send_img_to_pc(uint8_t *img, uint32_t imgLen, int w, int h, float bbox
     utils_send_byte(DEBUG_COMPORT, (h >> 8) & 0xff); // high byte
     utils_send_byte(DEBUG_COMPORT, (h >> 0) & 0xff); // low byte
 
+    // Transmit the BBOX information in for loop with 5 iterations
+	for(int i = 0; i < 5; i++){
+		utils_send_byte(DEBUG_COMPORT, (bbox[i] >> 8) & 0xff); // high byte
+		utils_send_byte(DEBUG_COMPORT, (bbox[i] >> 0) & 0xff); // low byte
+	}
     // Transmit the pixel format of the image
     len = strlen((char *)pixelformat);
     utils_send_byte(DEBUG_COMPORT, len & 0xff);
     utils_send_bytes(DEBUG_COMPORT, pixelformat, len);
 
-    // Transmit the BBOX information in for loop with 5 iterations
-    for(int i = 0; i < 5; i++){
-        utils_send_byte(DEBUG_COMPORT, (imgLen >> 24) & 0xff); // high byte
-        utils_send_byte(DEBUG_COMPORT, (imgLen >> 16) & 0xff); // low byte
-        utils_send_byte(DEBUG_COMPORT, (imgLen >> 8) & 0xff); // low byte
-        utils_send_byte(DEBUG_COMPORT, (imgLen >> 0) & 0xff); // low byte
-    }
     // Transmit the image length in bytes
     utils_send_byte(DEBUG_COMPORT, (imgLen >> 24) & 0xff); // high byte
     utils_send_byte(DEBUG_COMPORT, (imgLen >> 16) & 0xff); // low byte
