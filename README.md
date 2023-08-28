@@ -1,6 +1,6 @@
-# Face Detection on the MAXIM7800 Board with the AI8X Framework
+# Face Detection on the MAX78000 AI Mictocontroller with the AI8X Framework
 
-This project aims to demonstrate face detection using the AI8X training and synthesis framework on the MAXIM7800 microcontroller, specifically the MAXIM7800 FTHR_RevA development board. The project leverages the power of the hardware NN accelerator unit on the MAXIM7800. This requires a model that is tightly bound by the physical capabilites of the MCU. Moreover, an attempt is made to use the integrated camera on the development board to run real-time inferences.
+This project aims to demonstrate face detection using the AI8X training and synthesis framework on the MAX78000 microcontroller, specifically the MAXIM7800 FTHR_RevA development board. The project leverages the power of the hardware NN accelerator unit on the MAXIM78000. This requires a model that is tightly bound by the physical capabilites of the MCU. Moreover, an attempt is made to use the integrated camera on the development board to run real-time inferences.
 
 ## Overview
 
@@ -55,9 +55,9 @@ To get started with this project, follow these steps:
 
    **Note:** Generate sample_widerfaces.py manually in the Jupyter Notebook.
 
-5. Deploy on Maxim7800:
+5. Deploy on MAX78000:
 
-   - Use the Maxim SDK to flash the generated files onto the MAXIM7800. 
+   - Use the Maxim SDK to flash the generated files onto the MAXIM78000. 
    - To enable extra features, e.g. input from camera stream, the generated files have to be changed. Alternatively, the already synthesized files in `synthed_net` in this repository can be flashed.
 
 ## Results
