@@ -1,6 +1,6 @@
-# Face Detection on the MAX78000 AI Mictocontroller with the AI8X Framework
+# Face Detection on the MAX78000 Microcontroller with the AI8X Framework
 
-This project aims to demonstrate face detection using the AI8X training and synthesis framework on the MAX78000 microcontroller, specifically the MAXIM7800 FTHR_RevA development board. The project leverages the power of the hardware NN accelerator unit on the MAXIM78000. This requires a model that is tightly bound by the physical capabilites of the MCU. Moreover, an attempt is made to use the integrated camera on the development board to run real-time inferences.
+This project aims to demonstrate face detection using the AI8X training and synthesis framework on the MAX78000 microcontroller, specifically the MAXIM7800 FTHR_RevA development board. The project leverages the power of the hardware NN accelerator unit on the MAXIM78000. This requires a model that is tightly bound by the physical capabilities of the MCU. Moreover, an attempt is made to use the integrated camera on the development board to run real-time inferences.
 
 ## Overview
 
@@ -12,7 +12,7 @@ The project consists of the following components:
 
 3. Training: The model is trained using the AI8X framework. The training process involves optimizing the model parameters using the training dataset and a custom loss function specifically designed for face detection.
 
-4. Inference: After training, the model is used to perform face detection on live images from the onboard camera of the MAXIM7800 microcontroller. The detected faces are visualized in real-time using bounding boxes.
+4. Inference: After training, the model is used to perform face detection on live images from the onboard camera of the MAXIM7800 FTHR_RevA development board. The detected faces are visualized in real-time using bounding boxes.
 
 ## Getting Started
 
@@ -61,7 +61,7 @@ To get started with this project, follow these steps:
    - To enable extra features, e.g. input from camera stream, the generated files have to be changed. Alternatively, the already synthesized files in `synthed_net` in this repository can be flashed.
 
 ## Results
-The project works with some accuracy. Fewexample outputs (retrieved from the generated `sampleoutput.h` file after synthesis), can be seen below for the RNet network. 
+The project works with some accuracy. A few example outputs (retrieved from the generated `sampleoutput.h` file after synthesis), can be seen below for the RNet network. 
 ![plot](widerfacernet_samples.png)
 
 The demo can be flashed on a MAXIM7800 FTHR_RevA board with the files in the `Demo/widerfaceonet_vfinal_live` folder. The `live-inference-utils.py` script can be used to communicate with the MAXIM7800 over UART and receive image and boundary box data every second.
