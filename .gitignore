@@ -15,15 +15,15 @@
 .vscode/
 
 
-# Upload only the Jupyter Notebook and the files in the "ai8x" subfolder
+# Upload only specific files
 !*.ipynb
 !*.py
 !*.yaml
 !*.sh
-!/ai8x/
-!/ai8x_onet/
+!/training/
+!/docs/*
 # Include all files with arbitrary extension in this folder
-!*/synthed_net/**
+!*/synthesis/**
 utils.py
-**/synthed_net/widerfacene*
-**/synthed_net/widerface*net*
+**/synthesis/widerfacene*
+**/synthesis/widerface*net*
