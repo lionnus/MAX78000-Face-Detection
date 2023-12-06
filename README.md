@@ -2,6 +2,26 @@
 
 This project aims to demonstrate face detection using the AI8X training and synthesis framework on the MAX78000 microcontroller, specifically the MAXIM7800 FTHR_RevA development board. The project leverages the power of the hardware NN accelerator unit on the MAXIM78000. This requires a model that is tightly bound by the physical capabilities of the MCU. Moreover, an attempt is made to use the integrated camera on the development board to run real-time inferences.
 
+## Repository structure
+
+- `demo/`
+    Contains demonstration scripts and configurations for ONET and RNET models.
+    - `ONET_demo/`, `RNET_demo/`: Project files that can directly be flashed with the MSDK.
+    - `live-inference-util.py`: Utility script for the live inference.
+
+- `development/`
+    Scripts for development and notebook for exploration.
+
+- `docs/`
+    Documentation and detailed results.
+
+- `synthesis/`
+    Contains files for model synthesis and deployment on hardware.
+    - `custom_files/`: Files that have been modified after automatic code generation during synthesis.
+
+- `training/`
+    Files needed for the `ai8x-training`, including the dataloader, network, and MAX78000 hardware configuration YAML.
+
 ## Overview
 
 The project consists of the following components:
@@ -22,15 +42,15 @@ To get started with this project, follow these steps:
 
    `git clone https://github.com/lionnus/maxim7800-face-detection.git`
 
-2. Set up the ai8x-training and ai8x-synthesis environments and install the MSDK
+2. Set up the ai8x-training and ai8x-synthesis environments and install the Maxim SDK.
 
 3. Prepare the dataset:
 
    - Download the WIDER Faces dataset and place it in the appropriate directory. See Jupyter Notebook for changes made to the dataset structure.
-   - Preprocess and transform the dataset using the provided script.
+   - Preprocess and transform the dataset using the provided scripts.
 
 4. Train the model:
-   - Copy the files from the git repository to the `ai8x-training` folder with the provided script `copy_to_ai8x.sh`, adjust if necessary.
+   - Copy the files from this repository to the `ai8x-training` folder with the provided script `copy_to_ai8x.sh`, adjust if necessary.
 
    - Run the training script to train the face detection model using the AI8X framework. Within the `ai8x-training` environment, run:
 
@@ -58,13 +78,13 @@ To get started with this project, follow these steps:
 5. Deploy on MAX78000:
 
    - Use the Maxim SDK to flash the generated files onto the MAXIM78000. 
-   - To enable extra features, e.g. input from camera stream, the generated files have to be changed. Alternatively, the already synthesized files in `synthed_net` in this repository can be flashed.
+   - To enable extra features, e.g. input from camera stream, the generated files have to be changed. These custom files can be found in `synthesis/custom_files`
 
 ## Results
 The project works with some accuracy. A few example outputs (retrieved from the generated `sampleoutput.h` file after synthesis), can be seen below for the RNet network. 
-![plot](widerfacernet_samples.png)
+![plot](docs/widerfacernet_samples.png)
 
-The demo can be flashed on a MAXIM7800 FTHR_RevA board with the files in the `Demo/widerfaceonet_vfinal_live` folder. The `live-inference-utils.py` script can be used to communicate with the MAXIM7800 over UART and receive image and boundary box data every second.
+The demo can be flashed on a MAXIM7800 FTHR_RevA board with the files in the `demo/ONET_demo/` or `demo/RNET_demo/` folder. The `live-inference-utils.py` script can be used to communicate with the MAX78000 over UART and receive image and boundary box data every second.
 
 ## Contributing
 
