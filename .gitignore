@@ -12,6 +12,7 @@
 *.jpg
 *.npy
 *.png
+.vscode/
 
 
 # Upload only the Jupyter Notebook and the files in the "ai8x" subfolder
